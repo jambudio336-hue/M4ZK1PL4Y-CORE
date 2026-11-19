@@ -1,0 +1,37 @@
+app:
+  host: 127.0.0.1
+  port: 8777
+  concurrency: 40
+  rps_per_host: 12
+  tool_timeout: 900
+  max_subs: 4000
+  safe_mode: false
+  callback_host: ""          # IP lo yang bisa dihubungi target. kosong = auto-detect
+  callback_port_range: [40000, 40100]
+recon:
+  resolvers: [1.1.1.1, 8.8.8.8, 9.9.9.9]
+  subs_wordlist: config/wordlists/subs-20k.txt
+  paths_wordlist: config/wordlists/paths-2k.txt
+  permute: true
+  crt_sh: true
+vuln:
+  nuclei_severity: [critical, high, medium]
+  nuclei_tags: [rce, cve, sqli, ssti, lfi, ssrf, upload, deserialization, default-login, takeover, exposure]
+  sqli_level: 3
+  sqli_risk: 2
+  idor_mutations: 24
+  ssti_engines: [jinja2, twig, freemarker, velocity, erb, smarty]
+exploit:
+  enabled: true
+  auto_reverse: true
+  auto_webshell: true
+  auto_sqli_dump: true
+  post_enum: true
+  post_db_dump: true
+  post_loot: true
+  post_privesc: true
+  loot_max_mb: 200
+  loot_exts: [.env, .conf, .config, .ini, .yml, .yaml, .json, .sql, .bak, .key, .pem, .ovpn, id_rsa]
+report:
+  include_evidence: true
+  sign: true
