@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 280" width="100%">
+  <defs>
+    <filter id="g"><feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></defs>
+    <linearGradient id="t" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#00ff9c"/><stop offset="1" stop-color="#065f46"/></linearGradient>
+    <pattern id="gr" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" fill="none" stroke="#00ff9c" stroke-opacity=".06"/></pattern>
+  </defs>
+  <rect width="1000" height="280" fill="#05060a"/>
+  <rect width="1000" height="280" fill="url(#gr)">
+    <animate attributeName="opacity" values="1;.35;1" dur="5.5s" repeatCount="indefinite"/></rect>
+  <text x="500" y="126" text-anchor="middle" font-family="monospace" font-size="58"
+        font-weight="bold" fill="url(#t)" filter="url(#g)" letter-spacing="8">M4ZK1PL4Y
+    <animate attributeName="opacity" values="1;.6;1;.85;1" dur="3.2s" repeatCount="indefinite"/></text>
+  <text x="500" y="168" text-anchor="middle" font-family="monospace" font-size="28"
+        fill="#c9d1d9" letter-spacing="18" opacity=".85">C O R E</text>
+  <text x="500" y="206" text-anchor="middle" font-family="monospace" font-size="12"
+        fill="#4a5568">enum · origin · validate ×2 · exploit · pty · dump · report</text>
+  <g stroke="#ff2d55" stroke-width="2" fill="none" opacity=".85">
+    <path d="M96 224 q12 36 2 48"><animate attributeName="d"
+      values="M96 224 q12 36 2 48;M96 224 q16 42 6 54;M96 224 q12 36 2 48"
+      dur="2.4s" repeatCount="indefinite"/></path>
+    <path d="M904 224 q-12 32 -2 44"><animate attributeName="d"
+      values="M904 224 q-12 32 -2 44;M904 224 q-18 40 -6 52;M904 224 q-12 32 -2 44"
+      dur="2.9s" repeatCount="indefinite"/></path>
+  </g>
+  <rect y="0" width="1000" height="3" fill="#00ff9c" opacity=".4">
+    <animate attributeName="y" values="-3;280" dur="3.6s" repeatCount="indefinite"/></rect>
+</svg>
